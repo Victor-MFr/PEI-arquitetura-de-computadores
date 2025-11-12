@@ -21,6 +21,7 @@
 // ===========================
 #define PINO_TENSAO 35     // ZMPT101B
 #define PINO_CORRENTE 36   // ACS712
+#define RELAY 32
 
 // ===========================
 // CALIBRAÇÃO DOS SENSORES
@@ -29,8 +30,8 @@
 // Esses valores devem ser ajustados de acordo com o seu módulo.
 // Você precisará fazer um teste com multímetro e carga conhecida.
 //
-#define CALIBRACAO_TENSAO 55.23   // Ajuste até o valor RMS bater com o multímetro
-#define CALIBRACAO_CORRENTE 26.4  // Ajuste conforme o sensor ACS712 (ex: 30A = 26.4, 20A = 19.5, 5A = 11.1)
+#define CALIBRACAO_TENSAO 40.9   // Ajuste até o valor RMS bater com o multímetro
+#define CALIBRACAO_CORRENTE 1.98  // Ajuste conforme o sensor ACS712 (ex: 30A = 26.4, 20A = 19.5, 5A = 11.1)
 #define AJUSTE_FASE 1.7           // Corrige a defasagem entre tensão e corrente
 
 // ===========================
@@ -114,10 +115,9 @@ void loop() {
     Firebase.RTDB.setFloat(&fbdo, "/medidas/voltagem", tensao);
     Firebase.RTDB.setFloat(&fbdo, "/medidas/corrente", corrente);
     Firebase.RTDB.setFloat(&fbdo, "/medidas/potencia_real", potencia_real);
-    Firebase.RTDB.setFloat(&fbdo, "/medidas/potencia_aparente", potencia_aparente);
-    Firebase.RTDB.setFloat(&fbdo, "/medidas/fator_potencia", fator_potencia);
+    
   }
   */
 
-  delay(5000);
+  delay(500);
 }

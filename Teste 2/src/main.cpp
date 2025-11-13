@@ -1,15 +1,15 @@
 #include <WiFi.h>
 #include <Firebase_ESP_Client.h>
-#include <EmonLib.h>   // Biblioteca para medição de energia
+#include <EmonLib.h>
 
 // ===========================
-// CONFIGURAÇÕES DE REDE (opcional)
+// CONFIGURAÇÕES DE REDE
 // ===========================
 #define WIFI_SSID ""
 #define WIFI_PASS ""
 
 // ===========================
-// CONFIGURAÇÕES DO FIREBASE (opcional)
+// CONFIGURAÇÕES DO FIREBASE
 // ===========================
 #define API_KEY "AIzaSyCe32jGPp6BfjjAslNZfBsxv35tPaslyM8"
 #define DATABASE_URL "https://arquitetura-de-computado-7ad5a-default-rtdb.firebaseio.com"
@@ -26,33 +26,37 @@
 // ===========================
 // CALIBRAÇÃO DOS SENSORES
 // ===========================
-//
-// Esses valores devem ser ajustados de acordo com o seu módulo.
-// Você precisará fazer um teste com multímetro e carga conhecida.
-//
-#define CALIBRACAO_TENSAO 40.9   // Ajuste até o valor RMS bater com o multímetro
-#define CALIBRACAO_CORRENTE 1.98  // Ajuste conforme o sensor ACS712 (ex: 30A = 26.4, 20A = 19.5, 5A = 11.1)
-#define AJUSTE_FASE 1.7           // Corrige a defasagem entre tensão e corrente
+
+#define CALIBRACAO_TENSAO 40.9
+#define CALIBRACAO_CORRENTE 1.98
+#define AJUSTE_FASE 1.7
 
 // ===========================
 // OBJETOS DA BIBLIOTECA
 // ===========================
-EnergyMonitor emon1;   // Objeto principal da EmonLib
+EnergyMonitor emon1;
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 unsigned long sendDataPrevMillis = 0;
+
+// ===========================
+// VARIÁVEIS GLOBAIS
+// ===========================
+int contador = 0;
 
 void setup() {
   Serial.begin(115200);
   delay(2000);
   Serial.println("Inicializando sistema de medição...");
 
+  pinMode(RELAY, OUTPUT);
+
   // Configuração do EmonLib
   emon1.voltage(PINO_TENSAO, CALIBRACAO_TENSAO, AJUSTE_FASE);
   emon1.current(PINO_CORRENTE, CALIBRACAO_CORRENTE);
 
-  // ====== (opcional) Conexão Wi-Fi ======
+  // ====== Conexão Wi-Fi ======
   /*
   Serial.println("Conectando-se ao Wi-Fi...");
   WiFi.begin(WIFI_SSID, WIFI_PASS);
@@ -63,7 +67,7 @@ void setup() {
   Serial.println(" Conectado!");
   */
 
-  // ====== (opcional) Inicialização do Firebase ======
+  // ====== Inicialização do Firebase ======
   /*
   config.api_key = API_KEY;
   auth.user.email = USER_EMAIL;
@@ -76,15 +80,24 @@ void setup() {
 }
 
 void loop() {
-  // Mede tensão e corrente durante 20 ciclos da rede (20 x 16,6ms = ~333ms)
+  int relay_status = digitalRead(RELAY);
+
   emon1.calcVI(20, 2000);
 
   // Leitura dos valores RMS e potências
   float tensao = emon1.Vrms;
   float corrente = emon1.Irms;
-  float potencia_real = emon1.realPower;        // W (considera fator de potência)
+  float potencia_real = emon1.realPower;        // Watts
   float potencia_aparente = emon1.apparentPower; // VA
   float fator_potencia = emon1.powerFactor;
+
+  if(tensao < 80 && contador > 20){
+    tensao = 0;
+    corrente = 0;
+    potencia_real = 0;
+  } else if(tensao > 238 && contador > 20){
+    tensao = 220;
+  }
 
   // Exibição no monitor serial
   Serial.println("===================================");
@@ -106,18 +119,23 @@ void loop() {
 
   Serial.print("Fator de Potência: ");
   Serial.println(fator_potencia, 2);
+
+  Serial.print("Leitura nº: ");
+  Serial.println(contador);
+
   Serial.println("===================================");
 
-  // ====== (opcional) Envio para o Firebase ======
-  /*
-  if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000)) {
-    sendDataPrevMillis = millis();
-    Firebase.RTDB.setFloat(&fbdo, "/medidas/voltagem", tensao);
-    Firebase.RTDB.setFloat(&fbdo, "/medidas/corrente", corrente);
-    Firebase.RTDB.setFloat(&fbdo, "/medidas/potencia_real", potencia_real);
-    
+  // ====== Envio para o Firebase ======
+  /*if(contador > 20){
+      if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000)) {
+      sendDataPrevMillis = millis();
+      Firebase.RTDB.setFloat(&fbdo, "/medidas/voltagem", tensao);
+      Firebase.RTDB.setFloat(&fbdo, "/medidas/corrente", corrente);
+      Firebase.RTDB.setFloat(&fbdo, "/medidas/potencia_real", potencia_real);
+      Firebase.RTDB.setFloat(&fbdo, "/medidas/relay_status", relay_status);
+      }
   }
   */
-
+  contador++;
   delay(500);
 }

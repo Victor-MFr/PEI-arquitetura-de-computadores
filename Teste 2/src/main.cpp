@@ -5,14 +5,14 @@
 // ===========================
 // CONFIGURAÇÕES DE REDE
 // ===========================
-#define WIFI_SSID ""
-#define WIFI_PASS ""
+#define WIFI_SSID "502"
+#define WIFI_PASS "th2811fra"
 
 // ===========================
 // CONFIGURAÇÕES DO FIREBASE
 // ===========================
-#define API_KEY "AIzaSyCe32jGPp6BfjjAslNZfBsxv35tPaslyM8"
-#define DATABASE_URL "https://arquitetura-de-computado-7ad5a-default-rtdb.firebaseio.com"
+#define API_KEY "AIzaSyC8bqCXthUftcj2c0dzHIW3j_gReOd4rPE"
+#define DATABASE_URL "https://arquitetura-de-computado-54e7e-default-rtdb.firebaseio.com"
 #define USER_EMAIL "victorfragoso88@gmail.com"
 #define USER_PASSWORD "123456789"
 
@@ -57,7 +57,6 @@ void setup() {
   emon1.current(PINO_CORRENTE, CALIBRACAO_CORRENTE);
 
   // ====== Conexão Wi-Fi ======
-  /*
   Serial.println("Conectando-se ao Wi-Fi...");
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   while (WiFi.status() != WL_CONNECTED) {
@@ -65,18 +64,27 @@ void setup() {
     Serial.print(".");
   }
   Serial.println(" Conectado!");
-  */
 
-  // ====== Inicialização do Firebase ======
-  /*
+  // Configuração do Firebase
   config.api_key = API_KEY;
   auth.user.email = USER_EMAIL;
   auth.user.password = USER_PASSWORD;
   config.database_url = DATABASE_URL;
+  
   Firebase.reconnectNetwork(true);
+  fbdo.setBSSLBufferSize(4096, 1024);
+  fbdo.setResponseSize(2048);
+
+  // Inicializar Firebase
+  Serial.println("Inicializando Firebase...");
   Firebase.begin(&config, &auth);
-  Firebase.setDoubleDigits(5);
-  */
+  config.timeout.serverResponse = 10 * 1000;
+
+  if (Firebase.ready()) {
+    Serial.println("Firebase inicializado com sucesso!");
+  } else {
+    Serial.println("Falha ao conectar com o Firebase!");
+  }
 }
 
 void loop() {
@@ -85,9 +93,9 @@ void loop() {
   emon1.calcVI(20, 2000);
 
   // Leitura dos valores RMS e potências
-  float tensao = emon1.Vrms;
-  float corrente = emon1.Irms;
-  float potencia_real = emon1.realPower;        // Watts
+  float tensao = emon1.Vrms;// Volts
+  float corrente = emon1.Irms;// Amperes
+  float potencia_real = emon1.realPower;// Watts
   float potencia_aparente = emon1.apparentPower; // VA
   float fator_potencia = emon1.powerFactor;
 
@@ -97,6 +105,8 @@ void loop() {
     potencia_real = 0;
   } else if(tensao > 238 && contador > 20){
     tensao = 220;
+  } else if(tensao > 130 && tensao < 200 && contador > 20){
+    tensao = 127;
   }
 
   // Exibição no monitor serial
@@ -120,22 +130,48 @@ void loop() {
   Serial.print("Fator de Potência: ");
   Serial.println(fator_potencia, 2);
 
+  Serial.print("Status do Relay: ");
+  if(relay_status == HIGH){
+    Serial.println("LIGADO");
+  } else {
+    Serial.println("DESLIGADO");
+  }
+
   Serial.print("Leitura nº: ");
   Serial.println(contador);
 
   Serial.println("===================================");
 
+  // Verifica se a conexão Wi-Fi está ativa
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("WiFi perdido, tentando reconectar...");
+    WiFi.reconnect();
+    delay(1000);
+  }
+
   // ====== Envio para o Firebase ======
-  /*if(contador > 20){
-      if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000)) {
+  if(contador > 20){
+    if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000)) {
       sendDataPrevMillis = millis();
       Firebase.RTDB.setFloat(&fbdo, "/medidas/voltagem", tensao);
       Firebase.RTDB.setFloat(&fbdo, "/medidas/corrente", corrente);
       Firebase.RTDB.setFloat(&fbdo, "/medidas/potencia_real", potencia_real);
-      Firebase.RTDB.setFloat(&fbdo, "/medidas/relay_status", relay_status);
+      Firebase.RTDB.setInt(&fbdo, "/medidas/relay_status", relay_status);
+
+      // Leitura de comando para controle do relé
+      if (Firebase.RTDB.getInt(&fbdo, "/controle_relay")) {
+        int relay_command = fbdo.intData();
+        if (relay_command == 1) {
+          digitalWrite(RELAY, HIGH);
+          Serial.println("Relé desligado pelo Firebase (DESLIGADO)");
+        } else if (relay_command == 0) {
+          digitalWrite(RELAY, LOW);
+          Serial.println("Relé acionado pelo Firebase (LIGADO)");
+        }
       }
+    }
   }
-  */
+  
   contador++;
   delay(500);
 }

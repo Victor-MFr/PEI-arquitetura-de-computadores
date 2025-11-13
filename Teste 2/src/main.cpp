@@ -5,8 +5,8 @@
 // ===========================
 // CONFIGURAÇÕES DE REDE
 // ===========================
-#define WIFI_SSID "502"
-#define WIFI_PASS "th2811fra"
+#define WIFI_SSID ""
+#define WIFI_PASS ""
 
 // ===========================
 // CONFIGURAÇÕES DO FIREBASE
@@ -175,3 +175,4 @@ void loop() {
   contador++;
   delay(500);
 }
+

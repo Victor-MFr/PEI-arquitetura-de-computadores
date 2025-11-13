@@ -5,8 +5,8 @@
 // ===========================
 // CONFIGURAÇÕES DE REDE
 // ===========================
-#define WIFI_SSID ""
-#define WIFI_PASS ""
+#define WIFI_SSID "PEI"
+#define WIFI_PASS "123456789"
 
 // ===========================
 // CONFIGURAÇÕES DO FIREBASE
@@ -21,7 +21,7 @@
 // ===========================
 #define PINO_TENSAO 35     // ZMPT101B
 #define PINO_CORRENTE 36   // ACS712
-#define RELAY 32
+#define RELAY 26
 
 // ===========================
 // CALIBRAÇÃO DOS SENSORES
@@ -105,8 +105,10 @@ void loop() {
     potencia_real = 0;
   } else if(tensao > 238 && contador > 20){
     tensao = 220;
-  } else if(tensao > 130 && tensao < 200 && contador > 20){
+  } else if(tensao > 130 && tensao < 160 && contador > 20){
     tensao = 127;
+  } else if(tensao > 160 && tensao < 200 & contador > 20){
+    tensao = 220;
   }
 
   // Exibição no monitor serial
@@ -133,14 +135,12 @@ void loop() {
   Serial.print("Status do Relay: ");
   if(relay_status == HIGH){
     Serial.println("LIGADO");
-  } else {
+  } else if(relay_status == LOW){
     Serial.println("DESLIGADO");
   }
 
   Serial.print("Leitura nº: ");
   Serial.println(contador);
-
-  Serial.println("===================================");
 
   // Verifica se a conexão Wi-Fi está ativa
   if (WiFi.status() != WL_CONNECTED) {
@@ -161,18 +161,18 @@ void loop() {
       // Leitura de comando para controle do relé
       if (Firebase.RTDB.getInt(&fbdo, "/controle_relay")) {
         int relay_command = fbdo.intData();
-        if (relay_command == 1) {
+        if (relay_command == 0) {
           digitalWrite(RELAY, HIGH);
           Serial.println("Relé desligado pelo Firebase (DESLIGADO)");
-        } else if (relay_command == 0) {
+        } else if (relay_command == 1) {
           digitalWrite(RELAY, LOW);
           Serial.println("Relé acionado pelo Firebase (LIGADO)");
         }
       }
     }
   }
-  
+  Serial.println("===================================");
+
   contador++;
   delay(500);
 }
-

@@ -44,6 +44,12 @@ unsigned long sendDataPrevMillis = 0;
 // VARIÁVEIS GLOBAIS
 // ===========================
 int contador = 0;
+int idMedicao = 1;
+
+// ===========================
+// DECLARAÇÃO DE FUNÇÕES
+// ===========================
+int recuperarUltimoId(); 
 
 void setup() {
   Serial.begin(115200);
@@ -85,6 +91,16 @@ void setup() {
   } else {
     Serial.println("Falha ao conectar com o Firebase!");
   }
+
+  Serial.println("Buscando último ID salvo no Firebase...");
+
+  int ultimo = recuperarUltimoId();
+  idMedicao = ultimo + 1;
+
+  Serial.print("Última medição encontrada: ");
+  Serial.println(ultimo);
+  Serial.print("Próxima medição será: ");
+  Serial.println(idMedicao);
 }
 
 void loop() {
@@ -153,10 +169,24 @@ void loop() {
   if(contador > 20){
     if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000)) {
       sendDataPrevMillis = millis();
-      Firebase.RTDB.setFloat(&fbdo, "/medidas/voltagem", tensao);
-      Firebase.RTDB.setFloat(&fbdo, "/medidas/corrente", corrente);
-      Firebase.RTDB.setFloat(&fbdo, "/medidas/potencia_real", potencia_real);
-      Firebase.RTDB.setInt(&fbdo, "/medidas/relay_status", relay_status);
+
+      char caminho[100];
+
+      sprintf(caminho, "/medidas/Medicao-%d/voltagem", idMedicao);
+      Firebase.RTDB.setFloat(&fbdo, caminho, tensao);
+
+      sprintf(caminho, "/medidas/Medicao-%d/corrente", idMedicao);
+      Firebase.RTDB.setFloat(&fbdo, caminho, corrente);
+
+      sprintf(caminho, "/medidas/Medicao-%d/potencia_real", idMedicao);
+      Firebase.RTDB.setFloat(&fbdo, caminho, potencia_real);
+
+      sprintf(caminho, "/medidas/Medicao-%d/relay_status", idMedicao);
+      Firebase.RTDB.setInt(&fbdo, caminho, relay_status);
+
+      Serial.printf("Salvo em: /medidas/Medicao-%d\n", idMedicao);
+
+      idMedicao++;
 
       // Leitura de comando para controle do relé
       if (Firebase.RTDB.getInt(&fbdo, "/controle_relay")) {
@@ -175,4 +205,34 @@ void loop() {
 
   contador++;
   delay(500);
+}
+
+int recuperarUltimoId() {
+  if (Firebase.RTDB.get(&fbdo, "/medidas")) {
+    if (fbdo.dataType() == "json") {
+
+      FirebaseJson json = fbdo.jsonObject();
+      size_t len = json.iteratorBegin();
+
+      int maiorId = 0;
+
+      for (size_t i = 0; i < len; i++) {
+        String key, value;
+        int type;
+
+        json.iteratorGet(i, type, key, value);
+
+        if (key.startsWith("Medicao-")) {
+          int numero = key.substring(9).toInt();
+          if (numero > maiorId) {
+            maiorId = numero;
+          }
+        }
+      }
+
+      json.iteratorEnd();
+      return maiorId;
+    }
+  }
+  return 0;
 }

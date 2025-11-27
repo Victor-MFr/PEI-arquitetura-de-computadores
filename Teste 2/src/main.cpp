@@ -12,7 +12,7 @@
 // CONFIGURAÇÕES DO FIREBASE
 // ===========================
 #define API_KEY "AIzaSyC8bqCXthUftcj2c0dzHIW3j_gReOd4rPE"
-#define DATABASE_URL "https://arquitetura-de-computado-54e7e-default-rtdb.firebaseio.com"
+#define DATABASE_URL "arquitetura-de-computado-54e7e-default-rtdb.firebaseio.com"
 #define USER_EMAIL "victorfragoso88@gmail.com"
 #define USER_PASSWORD "123456789"
 
@@ -166,7 +166,7 @@ void loop() {
   }
 
   // ====== Envio para o Firebase ======
-  if(contador > 20){
+  if(contador > 1){
     if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000)) {
       sendDataPrevMillis = millis();
 

@@ -166,7 +166,7 @@ void loop() {
   }
 
   // ====== Envio para o Firebase ======
-  if(contador > 1){
+  if(contador > 15){
     if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000)) {
       sendDataPrevMillis = millis();
 
@@ -236,3 +236,4 @@ int recuperarUltimoId() {
   }
   return 0;
 }
+

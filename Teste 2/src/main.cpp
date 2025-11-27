@@ -2,53 +2,38 @@
 #include <Firebase_ESP_Client.h>
 #include <EmonLib.h>
 
-// ===========================
 // CONFIGURAÇÕES DE REDE
-// ===========================
 #define WIFI_SSID "PEI"
 #define WIFI_PASS "123456789"
 
-// ===========================
 // CONFIGURAÇÕES DO FIREBASE
-// ===========================
 #define API_KEY "AIzaSyC8bqCXthUftcj2c0dzHIW3j_gReOd4rPE"
 #define DATABASE_URL "arquitetura-de-computado-54e7e-default-rtdb.firebaseio.com"
 #define USER_EMAIL "victorfragoso88@gmail.com"
 #define USER_PASSWORD "123456789"
 
-// ===========================
 // PINOS DOS SENSORES
-// ===========================
 #define PINO_TENSAO 35     // ZMPT101B
 #define PINO_CORRENTE 36   // ACS712
 #define RELAY 26
 
-// ===========================
 // CALIBRAÇÃO DOS SENSORES
-// ===========================
-
 #define CALIBRACAO_TENSAO 40.9
 #define CALIBRACAO_CORRENTE 1.98
 #define AJUSTE_FASE 1.7
 
-// ===========================
 // OBJETOS DA BIBLIOTECA
-// ===========================
 EnergyMonitor emon1;
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 unsigned long sendDataPrevMillis = 0;
 
-// ===========================
 // VARIÁVEIS GLOBAIS
-// ===========================
 int contador = 0;
 int idMedicao = 1;
 
-// ===========================
 // DECLARAÇÃO DE FUNÇÕES
-// ===========================
 int recuperarUltimoId(); 
 
 void setup() {
@@ -62,7 +47,7 @@ void setup() {
   emon1.voltage(PINO_TENSAO, CALIBRACAO_TENSAO, AJUSTE_FASE);
   emon1.current(PINO_CORRENTE, CALIBRACAO_CORRENTE);
 
-  // ====== Conexão Wi-Fi ======
+  // Conexão Wi-Fi
   Serial.println("Conectando-se ao Wi-Fi...");
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   while (WiFi.status() != WL_CONNECTED) {
@@ -165,7 +150,7 @@ void loop() {
     delay(1000);
   }
 
-  // ====== Envio para o Firebase ======
+  // Envio para o Firebase
   if(contador > 15){
     if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000)) {
       sendDataPrevMillis = millis();
@@ -236,4 +221,3 @@ int recuperarUltimoId() {
   }
   return 0;
 }
-

@@ -88,6 +88,8 @@ void setup() {
   Serial.println(ultimo);
   Serial.print("Próxima medição: ");
   Serial.println(idMedicao);
+
+  digitalWrite(RELAY, HIGH);
 }
 
 void loop() {
@@ -98,19 +100,17 @@ void loop() {
   // Leitura dos valores RMS e potências
   float tensao = emon1.Vrms;// Volts
   float corrente = emon1.Irms;// Amperes
-  float potencia_real = emon1.realPower;// Watts
-  float potencia_aparente = emon1.apparentPower; // VA
-  float fator_potencia = emon1.powerFactor;
+  float potencia_real = emon1.realPower*-1;// Watts
 
-  if(tensao < 80 && contador > 20){
+  if(tensao < 80 && contador > 15){
     tensao = 0;
     corrente = 0;
     potencia_real = 0;
-  } else if(tensao > 238 && contador > 20){
+  } else if(tensao > 238 && contador > 15){
     tensao = 220;
-  } else if(tensao > 130 && tensao < 160 && contador > 20){
+  } else if(tensao > 130 && tensao < 160 && contador > 15){
     tensao = 127;
-  } else if(tensao > 160 && tensao < 200 & contador > 20){
+  } else if(tensao > 160 && tensao < 200 & contador > 15){
     tensao = 220;
   }
 
@@ -127,13 +127,6 @@ void loop() {
   Serial.print("Potência Real: ");
   Serial.print(potencia_real, 2);
   Serial.println(" W");
-
-  Serial.print("Potência Aparente: ");
-  Serial.print(potencia_aparente, 2);
-  Serial.println(" VA");
-
-  Serial.print("Fator de Potência: ");
-  Serial.println(fator_potencia, 2);
 
   Serial.print("Status do Relay: ");
   if(relay_status == HIGH){
@@ -182,10 +175,10 @@ void loop() {
         int relay_command = fbdo.intData();
         if (relay_command == 0) {
           digitalWrite(RELAY, HIGH);
-          Serial.println("Relé desligado pelo Firebase (DESLIGADO)");
+          Serial.println("Tomada acionada pelo Firebase (RELAY DESLIGADO)");
         } else if (relay_command == 1) {
           digitalWrite(RELAY, LOW);
-          Serial.println("Relé acionado pelo Firebase (LIGADO)");
+          Serial.println("Tomada desativada pelo Firebase (RELAY LIGADO)");
         }
       }
     }

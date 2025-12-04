@@ -36,9 +36,11 @@ int idMedicao = 1;
 // DECLARAÇÃO DE FUNÇÕES
 int recuperarUltimoId(); 
 
+
 void setup() {
   Serial.begin(115200);
   delay(2000);
+
   Serial.println("Inicializando sistema de medição...");
 
   pinMode(RELAY, OUTPUT);
@@ -47,7 +49,7 @@ void setup() {
   emon1.voltage(PINO_TENSAO, CALIBRACAO_TENSAO, AJUSTE_FASE);
   emon1.current(PINO_CORRENTE, CALIBRACAO_CORRENTE);
 
-  // Conexão Wi-Fi
+  // Conexão WiFi
   Serial.println("Conectando-se ao Wi-Fi...");
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   while (WiFi.status() != WL_CONNECTED) {
@@ -82,9 +84,9 @@ void setup() {
   int ultimo = recuperarUltimoId();
   idMedicao = ultimo + 1;
 
-  Serial.print("Última medição encontrada: ");
+  Serial.print("Último ID encontrado: ");
   Serial.println(ultimo);
-  Serial.print("Próxima medição será: ");
+  Serial.print("Próxima medição: ");
   Serial.println(idMedicao);
 }
 
@@ -143,7 +145,7 @@ void loop() {
   Serial.print("Leitura nº: ");
   Serial.println(contador);
 
-  // Verifica se a conexão Wi-Fi está ativa
+  // Verifica a conexão WiFi
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi perdido, tentando reconectar...");
     WiFi.reconnect();
@@ -171,9 +173,11 @@ void loop() {
 
       Serial.printf("Salvo em: /medidas/Medicao-%d\n", idMedicao);
 
+      Firebase.RTDB.setInt(&fbdo, "/ultimo_id", idMedicao);
+
       idMedicao++;
 
-      // Leitura de comando para controle do relé
+      // Leitura de comando para controle do relay
       if (Firebase.RTDB.getInt(&fbdo, "/controle_relay")) {
         int relay_command = fbdo.intData();
         if (relay_command == 0) {
@@ -193,31 +197,8 @@ void loop() {
 }
 
 int recuperarUltimoId() {
-  if (Firebase.RTDB.get(&fbdo, "/medidas")) {
-    if (fbdo.dataType() == "json") {
-
-      FirebaseJson json = fbdo.jsonObject();
-      size_t len = json.iteratorBegin();
-
-      int maiorId = 0;
-
-      for (size_t i = 0; i < len; i++) {
-        String key, value;
-        int type;
-
-        json.iteratorGet(i, type, key, value);
-
-        if (key.startsWith("Medicao-")) {
-          int numero = key.substring(9).toInt();
-          if (numero > maiorId) {
-            maiorId = numero;
-          }
-        }
-      }
-
-      json.iteratorEnd();
-      return maiorId;
-    }
+  if (Firebase.RTDB.getInt(&fbdo, "/ultimo_id")) {
+    return fbdo.intData();
   }
   return 0;
 }

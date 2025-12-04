@@ -115,7 +115,7 @@ void loop() {
   }
 
   // Exibição no monitor serial
-  Serial.println("===================================");
+  Serial.println(" ");
   Serial.print("Tensão RMS: ");
   Serial.print(tensao, 2);
   Serial.println(" V");
@@ -183,7 +183,7 @@ void loop() {
       }
     }
   }
-  Serial.println("===================================");
+  Serial.println(" ");
 
   contador++;
   delay(500);
@@ -195,3 +195,4 @@ int recuperarUltimoId() {
   }
   return 0;
 }
+

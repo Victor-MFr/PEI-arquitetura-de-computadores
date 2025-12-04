@@ -88,13 +88,13 @@ function App() {
           // Convertemos para número (parseFloat) para poder usar toFixed depois
           setKwh(parseFloat((potenciaWatts / 1000).toFixed(3)));
           
-          // relay_status: HIGH (1) = desligado, LOW (0) = ligado (lógica invertida no ESP32)
-          // Mas vamos verificar: no código ESP32, HIGH = desligado e LOW = ligado
-          // Então: se relay_status == 0 (LOW), status = true (ligado)
-          //        se relay_status == 1 (HIGH), status = false (desligado)
+          // relay_status: Lógica INVERTIDA do relé
+          // relay_status == 0 (LOW) → tomada LIGADA (status = true)
+          // relay_status == 1 (HIGH) → tomada DESLIGADA (status = false)
           const relayStatus = ultimaMedicao.relay_status;
-          // Lógica invertida: 0 = ligado, 1 = desligado
-          setStatus(relayStatus === 0 || relayStatus === false);
+          // Se relay_status for 0, a tomada está ligada (true)
+          // Se relay_status for 1, a tomada está desligada (false)
+          setStatus(relayStatus === 0);
           
           // Marca que os dados foram carregados
           setCarregando(false);

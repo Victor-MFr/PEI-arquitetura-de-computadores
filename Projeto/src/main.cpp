@@ -7,10 +7,10 @@
 #define WIFI_PASS "123456789"
 
 // CONFIGURAÇÕES DO FIREBASE
-#define API_KEY "AIzaSyC8bqCXthUftcj2c0dzHIW3j_gReOd4rPE"
-#define DATABASE_URL "arquitetura-de-computado-54e7e-default-rtdb.firebaseio.com"
-#define USER_EMAIL "victorfragoso88@gmail.com"
-#define USER_PASSWORD "123456789"
+#define API_KEY ""
+#define DATABASE_URL ""
+#define USER_EMAIL ""
+#define USER_PASSWORD ""
 
 // PINOS DOS SENSORES
 #define PINO_TENSAO 35     // ZMPT101B
